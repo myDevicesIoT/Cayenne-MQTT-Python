@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 
+# Data types
 TYPE_BAROMETRIC_PRESSURE = "bp" # Barometric pressure
 TYPE_BATTERY = "batt" # Battery
 TYPE_LUMINOSITY = "lum" # Luminosity
@@ -8,6 +9,7 @@ TYPE_RELATIVE_HUMIDITY = "rel_hum" # Relative Humidity
 TYPE_TEMPERATURE = "temp" # Temperature
 TYPE_VOLTAGE = "voltage" # Voltage
 
+# Unit types
 UNIT_UNDEFINED = "null"
 UNIT_PASCAL = "pa" # Pascal
 UNIT_HECTOPASCAL = "hpa" # Hectopascal
@@ -23,6 +25,11 @@ UNIT_CELSIUS = "c" # Celsius
 UNIT_KELVIN = "k" # Kelvin
 UNIT_MILLIVOLTS = "mv" # Millivolts
 
+# Topics
+COMMAND_TOPIC = "cmd"
+DATA_TOPIC = "data"
+RESPONSE_TOPIC = "response"
+
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, cayenne, rc):
     
@@ -30,31 +37,79 @@ def on_connect(client, cayenne, rc):
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
     cayenne.setConnected()
-    client.subscribe("$SYS/#")
+    command_topic = cayenne.getCommandTopic();
+    print("SUB %s\n" % command_topic)
+    client.subscribe(command_topic)
 
     cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
     cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, "1.0")
 
 
 # The callback for when a PUBLISH message is received from the server.
-def on_message(client, userdata, msg):
+def on_message(client, cayenne, msg):
     print(msg.topic+" "+str(msg.payload))
+
+    if cayenne.on_message:
+        message = CayenneMessage(msg)
+        error = cayenne.on_message(message)
+        if not error:
+            # If there was no error, we send the new channel state, which should be the command value we received.
+            cayenne.virtualWrite(message.channel, message.value)
+        # Send a response showing we received the message, along with any error from processing it.
+        cayenne.responseWrite(message.msg_id, error)
+        
+class CayenneMessage:
+    """ This is a class that describes an incoming Cayenne message. It is
+    passed to the on_message callback as the message parameter.
+
+    Members:
+
+    client_id : String. Client ID that the message was published on.
+    topic : String. Topic that the message was published on.
+    channel : Int. Channel that the message was published on.
+    msg_id : String. The message ID.
+    value : String. The message value.
+    """
+    def __init__(self, msg):
+        topic_tokens = msg.topic.split('/')
+        self.client_id = topic_tokens[3]
+        self.topic = topic_tokens[4]
+        self.channel = int(topic_tokens[5])
+        payload_tokens = msg.payload.split(',')
+        self.msg_id = payload_tokens[0]
+        self.value = payload_tokens[1]
+        
+    def __repr__(self):
+        return str(self.__dict__)
+        
+class CayenneMQTTClient:
+    """Cayenne MQTT Client class.
     
+    This is the main client class for connecting to Cayenne and sending and receiving data.
     
-class CayenneMQTTClient():
-    
+    Standard usage:
+    * Set on_message callback, if you are receiving data.
+    * Connect to Cayenne using the begin() function.
+    * Call loop() at intervals (or loop_forever() once) to perform message processing.
+    * Send data to Cayenne using write functions: virtualWrite(), celsiusWrite(), etc.
+    * Receive and process data from Cayenne in the on_message callback.
+
+    The on_message callback can be used by creating a function and assigning it to CayenneMQTTClient.on_message member.
+    The callback function should have the following signature: on_message(message)
+    The message variable passed to the callback is an instance of the CayenneMessage class.
+    """
     client = None
     rootTopic = ""
     connected = False
-
-    def dataTopic(self, channel):
-        return "%s/%s" % (rootTopic, channel)
-    
-    def mqttPublish(self, topic, payload):
-        print("PUB %s\n%s\n" % (topic, payload))
-        self.client.publish(topic, payload, 0, False)    
+    on_message = None
 
     def begin(self, username, password, clientid):
+    	"""Initializes the client and connects to Cayenne.
+        
+        username is the Cayenne username.
+        password is the Cayenne password.
+        clientID is the Cayennne client ID for the device.
+        """
         self.rootTopic = "v1/%s/things/%s" % (username, clientid)
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
         self.client.on_connect = on_connect
@@ -64,38 +119,119 @@ class CayenneMQTTClient():
         print("Connecting to mqtt.mydevices.com...")
 
     def setConnected(self):
+        """Set the connected flag."""
         self.connected = True
     
     def loop(self):
+        """Process Cayenne messages.
+        
+        This should be called regularly to ensure Cayenne messages are sent and received.
+        """
         self.client.loop()
     
     def loop_forever(self):
-        self.client().loop_forever()
+        """Process Cayenne messages in a blocking loop that runs forever."""
+        self.client.loop_forever()
     
     def getDataTopic(self, channel):
-        return "%s/data/%s" % (self.rootTopic, channel)
+        """Get the data topic string.
+        
+        channel is the channel to send data to.
+        """
+        return "%s/%s/%s" % (self.rootTopic, DATA_TOPIC, channel)
     
-    def virtualWrite(self, channel, value, dataType, dataUnit):
+    def getCommandTopic(self):
+        """Get the command topic string."""
+        return "%s/%s/+" % (self.rootTopic, COMMAND_TOPIC)
+
+    def getResponseTopic(self):
+        """Get the response topic string."""
+        return "%s/%s" % (self.rootTopic, RESPONSE_TOPIC)
+
+    def virtualWrite(self, channel, value, dataType="", dataUnit=""):
+        """Send data to Cayenne.
+        
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        dataType is the type of data.
+        dataUnit is the unit of the data.
+        """
         if (self.connected):
             topic = self.getDataTopic(channel)
-            payload = "%s,%s=%s" % (dataType, dataUnit, value)        
+            if dataType:
+                payload = "%s,%s=%s" % (dataType, dataUnit, value)
+            else:
+                payload = value
             self.mqttPublish(topic, payload)
-    
+
+    def responseWrite(self, msg_id, error_message):
+        """Send a command response to Cayenne.
+        
+        This should be sent when a command message has been received.
+        msg_id is the ID of the message received.
+        error_message is the error message to send. This should be set to None if there is no error.
+        """
+        if (self.connected):
+            topic = self.getResponseTopic()
+            if error_message:
+                payload = "error,%s=%s" % (msg_id, error_message)
+            else:
+                payload = "ok,%s" % (msg_id)
+            self.mqttPublish(topic, payload)            
+            
     def celsiusWrite(self, channel, value):
+        """Send a Celsius value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_TEMPERATURE, UNIT_CELSIUS)
 
     def fahrenheitWrite(self, channel, value):
+        """Send a Fahrenheit value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_TEMPERATURE, UNIT_FAHRENHEIT)
 
     def kelvinWrite(self, channel, value):
+        """Send a kelvin value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_TEMPERATURE, UNIT_KELVIN)
     
     def luxWrite(self, channel, value):
+        """Send a lux value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_LUMINOSITY, UNIT_LUX)
     
     def pascalWrite(self, channel, value):
+        """Send a pascal value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_BAROMETRIC_PRESSURE, UNIT_PASCAL)
     
     def hectoPascalWrite(self, channel, value):
+        """Send a hectopascal value to Cayenne.
+
+        channel is the Cayenne channel to use.
+        value is the data value to send.
+        """
         self.virtualWrite(channel, value, TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL)
 
+    def mqttPublish(self, topic, payload):
+        """Publish a payload to a topic
+        
+        topic is the topic string.
+        payload is the payload data.
+        """
+        print("PUB %s\n%s\n" % (topic, payload))
+        self.client.publish(topic, payload, 0, False)    

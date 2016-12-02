@@ -2,9 +2,10 @@
 import Cayenne
 import time
 
-MQTT_USERNAME  = "4af7bb30-a878-11e6-a85d-c165103f15c2"
-MQTT_PASSWORD  = "00612fd8d84aff146beb773f6b118a5517115b27"
-MQTT_CLIENT_ID = "0dd6bf00-a87b-11e6-a7c1-b395fc8a1540"
+# Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
+MQTT_USERNAME  = "MQTT_USERNAME"
+MQTT_PASSWORD  = "MQTT_PASSWORD"
+MQTT_CLIENT_ID = "MQTT_CLIENT_ID"
 
 
 client = Cayenne.CayenneMQTTClient()
