@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+import time
 
 # Data types
 TYPE_BAROMETRIC_PRESSURE = "bp" # Barometric pressure
@@ -32,11 +33,11 @@ RESPONSE_TOPIC = "response"
 
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, cayenne, rc):
-    
     print("Connected with result code "+str(rc))
     # Subscribing in on_connect() means that if we lose the connection and
     # reconnect then subscriptions will be renewed.
-    cayenne.setConnected()
+    cayenne.setConnected(True)
+    cayenne.setReconnect(False)
     command_topic = cayenne.getCommandTopic();
     print("SUB %s\n" % command_topic)
     client.subscribe(command_topic)
@@ -44,7 +45,12 @@ def on_connect(client, cayenne, rc):
     cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
     cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, "1.0")
 
-
+# The callback for when the client disconnects from the server.
+def on_disconnect(client, cayenne, rc):  
+    print("Disconnected with result code "+str(rc))
+    cayenne.setConnected(False)
+    cayenne.setReconnect(True)
+    
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, cayenne, msg):
     print(msg.topic+" "+str(msg.payload))
@@ -102,6 +108,7 @@ class CayenneMQTTClient:
     rootTopic = ""
     connected = False
     on_message = None
+    reconnect = False
 
     def begin(self, username, password, clientid):
     	"""Initializes the client and connects to Cayenne.
@@ -113,21 +120,37 @@ class CayenneMQTTClient:
         self.rootTopic = "v1/%s/things/%s" % (username, clientid)
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
         self.client.on_connect = on_connect
+        self.client.on_disconnect = on_disconnect
         self.client.on_message = on_message
         self.client.username_pw_set(username, password)
         self.client.connect("mqtt.mydevices.com", 1883, 60)
         print("Connecting to mqtt.mydevices.com...")
 
-    def setConnected(self):
-        """Set the connected flag."""
-        self.connected = True
+    def setConnected(self, connected):
+        """Set the connected flag.
+        
+        connected is True if connected, False otherwise"""
+        self.connected = connected
     
+    def setReconnect(self, reconnect):
+        """Set the connected flag.
+        
+        reconnect should be True if the client should reconnect, False otherwise"""
+        self.reconnect = reconnect
+
     def loop(self):
         """Process Cayenne messages.
         
         This should be called regularly to ensure Cayenne messages are sent and received.
         """
         self.client.loop()
+        if not self.connected and self.reconnect:
+            try:
+                self.client.reconnect()
+                self.reconnect = False
+            except:
+                print("Reconnect failed, retrying")
+                time.sleep(5)
     
     def loop_forever(self):
         """Process Cayenne messages in a blocking loop that runs forever."""
