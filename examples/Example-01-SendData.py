@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import Cayenne
+import cayenne.client
 import time
 
 # Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
@@ -8,7 +8,7 @@ MQTT_PASSWORD  = "MQTT_PASSWORD"
 MQTT_CLIENT_ID = "MQTT_CLIENT_ID"
 
 
-client = Cayenne.CayenneMQTTClient()
+client = cayenne.client.CayenneMQTTClient()
 
 client.begin(MQTT_USERNAME, MQTT_PASSWORD, MQTT_CLIENT_ID)
 

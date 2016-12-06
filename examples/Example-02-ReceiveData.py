@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import Cayenne
+import cayenne.client
 
 # Cayenne authentication info. This should be obtained from the Cayenne Dashboard.
 MQTT_USERNAME  = "MQTT_USERNAME"
@@ -12,7 +12,7 @@ def on_message(message):
     print("message received: " + str(message))
     # If there is an error processing the message return an error string, otherwise return nothing.
 
-client = Cayenne.CayenneMQTTClient()
+client = cayenne.client.CayenneMQTTClient()
 client.on_message = on_message
 client.begin(MQTT_USERNAME, MQTT_PASSWORD, MQTT_CLIENT_ID)
 client.loop_forever()

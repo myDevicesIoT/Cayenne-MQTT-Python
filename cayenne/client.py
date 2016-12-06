@@ -31,30 +31,41 @@ COMMAND_TOPIC = "cmd"
 DATA_TOPIC = "data"
 RESPONSE_TOPIC = "response"
 
+
 # The callback for when the client receives a CONNACK response from the server.
 def on_connect(client, cayenne, rc):
-    print("Connected with result code "+str(rc))
-    # Subscribing in on_connect() means that if we lose the connection and
-    # reconnect then subscriptions will be renewed.
-    cayenne.setConnected(True)
-    cayenne.setReconnect(False)
-    command_topic = cayenne.getCommandTopic();
-    print("SUB %s\n" % command_topic)
-    client.subscribe(command_topic)
-
-    cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
-    cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, "1.0")
+    if rc != 0:
+        # MQTT broker error codes
+        broker_errors = {
+            1 : 'unacceptable protocol version',
+            2 : 'identifier rejected',
+            3 : 'server unavailable',
+            4 : 'bad user name or password',
+            5 : 'not authorized',
+        }
+        error = "Connection failed, " + broker_errors.get(rc, "result code " + str(rc))
+        raise Exception(error)
+    else:
+        print("Connected with result code "+str(rc))
+        # Subscribing in on_connect() means that if we lose the connection and
+        # reconnect then subscriptions will be renewed.
+        cayenne.connected = True
+        cayenne.reconnect = False
+        command_topic = cayenne.getCommandTopic();
+        print("SUB %s\n" % command_topic)
+        client.subscribe(command_topic)
+        cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
+        cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, "1.0")
 
 # The callback for when the client disconnects from the server.
-def on_disconnect(client, cayenne, rc):  
+def on_disconnect(client, cayenne, rc):
     print("Disconnected with result code "+str(rc))
-    cayenne.setConnected(False)
-    cayenne.setReconnect(True)
+    cayenne.connected = False
+    cayenne.reconnect = True
     
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, cayenne, msg):
     print(msg.topic+" "+str(msg.payload))
-
     if cayenne.on_message:
         message = CayenneMessage(msg)
         error = cayenne.on_message(message)
@@ -81,7 +92,10 @@ class CayenneMessage:
         self.client_id = topic_tokens[3]
         self.topic = topic_tokens[4]
         self.channel = int(topic_tokens[5])
-        payload_tokens = msg.payload.split(',')
+        if msg.payload is str:
+            payload_tokens = msg.payload.split(',')
+        else:
+            payload_tokens = msg.payload.decode().split(',')
         self.msg_id = payload_tokens[0]
         self.value = payload_tokens[1]
         
@@ -107,11 +121,11 @@ class CayenneMQTTClient:
     client = None
     rootTopic = ""
     connected = False
-    on_message = None
     reconnect = False
+    on_message = None
 
     def begin(self, username, password, clientid):
-    	"""Initializes the client and connects to Cayenne.
+        """Initializes the client and connects to Cayenne.
         
         username is the Cayenne username.
         password is the Cayenne password.
@@ -123,20 +137,9 @@ class CayenneMQTTClient:
         self.client.on_disconnect = on_disconnect
         self.client.on_message = on_message
         self.client.username_pw_set(username, password)
-        self.client.connect("mqtt.mydevices.com", 1883, 60)
-        print("Connecting to mqtt.mydevices.com...")
-
-    def setConnected(self, connected):
-        """Set the connected flag.
-        
-        connected is True if connected, False otherwise"""
-        self.connected = connected
-    
-    def setReconnect(self, reconnect):
-        """Set the connected flag.
-        
-        reconnect should be True if the client should reconnect, False otherwise"""
-        self.reconnect = reconnect
+        hostname = "mqtt.mydevices.com"
+        self.client.connect(hostname, 1883, 60)
+        print("Connecting to %s..." % hostname)
 
     def loop(self):
         """Process Cayenne messages.
