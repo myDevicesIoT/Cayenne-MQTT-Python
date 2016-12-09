@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name             = 'Cayenne',
-      version          = '1.0',
+      version          = '1.0.0',
       author           = 'myDevices',
       author_email     = 'N/A',
       description      = 'Cayenne MQTT Python Library',
