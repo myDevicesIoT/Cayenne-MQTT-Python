@@ -1,6 +1,7 @@
 from setuptools import setup
 from codecs import open
 from os import path
+from cayenne import __version__
 
 here = path.abspath(path.dirname(__file__))
 
@@ -25,7 +26,7 @@ classifiers = ['Development Status :: 3 - Alpha',
                'Topic :: System :: Monitoring']
                
 setup(name             = 'cayenne-mqtt',
-      version          = '1.0.0',
+      version          = __version__,
       author           = 'myDevices',
       author_email     = 'N/A',
       description      = 'Cayenne MQTT Python Library',
@@ -34,7 +35,7 @@ setup(name             = 'cayenne-mqtt',
       keywords         = 'myDevices Cayenne MQTT',
       url              = 'https://github.com/myDevicesIoT/Cayenne-MQTT-Python',
       classifiers      = classifiers,
-      packages         = ['cayenne-mqtt'],
+      packages         = ['cayenne'],
       install_requires = [
         'paho-mqtt',
       ],

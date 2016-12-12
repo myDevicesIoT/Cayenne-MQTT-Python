@@ -1,5 +1,6 @@
 import paho.mqtt.client as mqtt
 import time
+from cayenne import __version__
 
 # Data types
 TYPE_BAROMETRIC_PRESSURE = "bp" # Barometric pressure
@@ -55,7 +56,7 @@ def on_connect(client, cayenne, rc):
         print("SUB %s\n" % command_topic)
         client.subscribe(command_topic)
         cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
-        cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, "1.0")
+        cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, __version__)
 
 # The callback for when the client disconnects from the server.
 def on_disconnect(client, cayenne, rc):
