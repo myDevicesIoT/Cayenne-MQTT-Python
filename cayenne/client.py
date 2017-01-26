@@ -124,13 +124,15 @@ class CayenneMQTTClient:
     connected = False
     reconnect = False
     on_message = None
-
-    def begin(self, username, password, clientid):
+    
+    def begin(self, username, password, clientid, hostname='mqtt.mydevices.com', port=1883):
         """Initializes the client and connects to Cayenne.
         
         username is the Cayenne username.
         password is the Cayenne password.
         clientID is the Cayennne client ID for the device.
+        hostname is the MQTT broker hostname.
+        port is the MQTT broker port.
         """
         self.rootTopic = "v1/%s/things/%s" % (username, clientid)
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
@@ -138,8 +140,7 @@ class CayenneMQTTClient:
         self.client.on_disconnect = on_disconnect
         self.client.on_message = on_message
         self.client.username_pw_set(username, password)
-        hostname = "mqtt.mydevices.com"
-        self.client.connect(hostname, 1883, 60)
+        self.client.connect(hostname, port, 60)        
         print("Connecting to %s..." % hostname)
 
     def loop(self):
