@@ -3,8 +3,10 @@ import time
 from cayenne import __version__
 
 # Data types
+TYPE_ACCELERATION = "accel" # Acceleration
 TYPE_BAROMETRIC_PRESSURE = "bp" # Barometric pressure
 TYPE_BATTERY = "batt" # Battery
+TYPE_GPS = "gps" # GPS data
 TYPE_LUMINOSITY = "lum" # Luminosity
 TYPE_PROXIMITY = "prox" # Proximity
 TYPE_RELATIVE_HUMIDITY = "rel_hum" # Relative Humidity
@@ -26,6 +28,7 @@ UNIT_FAHRENHEIT = "f" # Fahrenheit
 UNIT_CELSIUS = "c" # Celsius
 UNIT_KELVIN = "k" # Kelvin
 UNIT_MILLIVOLTS = "mv" # Millivolts
+UNIT_GRAVITY = "g" # Standard gravity
 
 # Topics
 COMMAND_TOPIC = "cmd"
@@ -254,6 +257,28 @@ class CayenneMQTTClient:
         value is the data value to send.
         """
         self.virtualWrite(channel, value, TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL)
+
+    def accelWrite(self, channel, x, y, z):
+        """Send an acceleration value list to Cayenne.
+
+        channel is the Cayenne channel to use.
+        x is the acceleration on the X-axis.
+        y is the acceleration on the Y-axis.
+        z is the acceleration on the Z-axis.
+        """
+        value = [x, y, z]
+        self.virtualWrite(channel, repr(value).replace(" ", ""), TYPE_ACCELERATION, UNIT_GRAVITY)
+
+    def gpsWrite(self, channel, latitude, longitude, altitude):
+        """Send a GPS value list to Cayenne.
+
+        channel is the Cayenne channel to use.
+        latitude is the latitude in degrees.
+        longitude is the longitude in degrees.
+        altitude is the altitude in meters.
+        """
+        value = [latitude, longitude, altitude]
+        self.virtualWrite(channel, repr(value).replace(" ", ""), TYPE_GPS, UNIT_METER)
 
     def mqttPublish(self, topic, payload):
         """Publish a payload to a topic

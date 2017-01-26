@@ -43,6 +43,8 @@ try:
     client.luxWrite(4, 4)
     client.pascalWrite(5, 5)
     client.hectoPascalWrite(6, 6)
+    client.accelWrite(7, 7.01, 7.02, -7.03)
+    client.gpsWrite(8, 27.986065, 86.922623, 29029)
 
     print("Test receiving commands")
     client.mqttPublish(client.rootTopic + '/cmd/10', 'senderror,0')
