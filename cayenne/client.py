@@ -1,5 +1,5 @@
-import paho.mqtt.client as mqtt
 import time
+import paho.mqtt.client as mqtt
 from cayenne import __version__
 
 # Data types
@@ -55,7 +55,7 @@ def on_connect(client, cayenne, rc):
         # reconnect then subscriptions will be renewed.
         cayenne.connected = True
         cayenne.reconnect = False
-        command_topic = cayenne.getCommandTopic();
+        command_topic = cayenne.getCommandTopic()
         print("SUB %s\n" % command_topic)
         client.subscribe(command_topic)
         cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
