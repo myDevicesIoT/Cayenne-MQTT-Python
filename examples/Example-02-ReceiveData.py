@@ -9,7 +9,7 @@ MQTT_CLIENT_ID = "MQTT_CLIENT_ID"
 
 # The callback for when a message is received from Cayenne.
 def on_message(message):
-    print("message received: " + str(message))
+    print(("message received: " + str(message)))
     # If there is an error processing the message return an error string, otherwise return nothing.
 
 client = cayenne.client.CayenneMQTTClient()

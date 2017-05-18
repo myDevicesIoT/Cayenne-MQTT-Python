@@ -14,7 +14,7 @@ parser.add_argument('--password', help='password', default='password')
 parser.add_argument('--clientID', help='clientID', default='clientID')
 
 args = parser.parse_args()
-print args
+print(args)
 
 try:
     done = False
@@ -59,7 +59,7 @@ try:
             raise Exception("Timed out while waiting for commands")
         
 except:
-    print(str(traceback.format_exc()))
+    print((str(traceback.format_exc())))
     print('Tests failed with exception.')
     sys.exit(1)
 
