@@ -14,7 +14,7 @@ parser.add_argument('--password', help='password', default='password')
 parser.add_argument('--clientID', help='clientID', default='clientID')
 
 args = parser.parse_args()
-print args
+print(args)
 
 try:
     done = False
