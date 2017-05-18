@@ -59,7 +59,7 @@ try:
             raise Exception("Timed out while waiting for commands")
         
 except:
-    print(str(traceback.format_exc()))
+    print((str(traceback.format_exc())))
     print('Tests failed with exception.')
     sys.exit(1)
 

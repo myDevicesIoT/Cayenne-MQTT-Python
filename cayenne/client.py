@@ -47,26 +47,26 @@ def on_connect(client, cayenne, rc):
         error = "Connection failed, " + broker_errors.get(rc, "result code " + str(rc))
         raise Exception(error)
     else:
-        print("Connected with result code "+str(rc))
+        print(("Connected with result code "+str(rc)))
         # Subscribing in on_connect() means that if we lose the connection and
         # reconnect then subscriptions will be renewed.
         cayenne.connected = True
         cayenne.reconnect = False
         command_topic = cayenne.getCommandTopic();
-        print("SUB %s\n" % command_topic)
+        print(("SUB %s\n" % command_topic))
         client.subscribe(command_topic)
         cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
         cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, __version__)
 
 # The callback for when the client disconnects from the server.
 def on_disconnect(client, cayenne, rc):
-    print("Disconnected with result code "+str(rc))
+    print(("Disconnected with result code "+str(rc)))
     cayenne.connected = False
     cayenne.reconnect = True
     
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, cayenne, msg):
-    print(msg.topic+" "+str(msg.payload))
+    print((msg.topic+" "+str(msg.payload)))
     if cayenne.on_message:
         message = CayenneMessage(msg)
         error = cayenne.on_message(message)
@@ -141,7 +141,7 @@ class CayenneMQTTClient:
         self.client.on_message = on_message
         self.client.username_pw_set(username, password)
         self.client.connect(hostname, port, 60)        
-        print("Connecting to %s..." % hostname)
+        print(("Connecting to %s..." % hostname))
 
     def loop(self):
         """Process Cayenne messages.
@@ -261,5 +261,5 @@ class CayenneMQTTClient:
         topic is the topic string.
         payload is the payload data.
         """
-        print("PUB %s\n%s\n" % (topic, payload))
+        print(("PUB %s\n%s\n" % (topic, payload)))
         self.client.publish(topic, payload, 0, False)    
