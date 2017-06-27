@@ -6,9 +6,9 @@ import pifacedigitalio
 #time.sleep(30) #Sleep to allow wireless to connect before starting MQTT
 
 #set up user info
-username = "username from mqtt dashboard"
-password = "password from mqtt dashboard"
-clientid = "clientid from mqtt dashboard"
+username = "5b21fd50-3fee-11e7-b3ab-4b1cd153a1be"
+password = "126a5fca0b3725720c6abf2079659ab50747f3a4"
+clientid = "a62696d0-5b69-11e7-8378-e1a615c9f526"
 
 #handle incoming messages from Cayenne
 def on_message(client, userdata, message):
