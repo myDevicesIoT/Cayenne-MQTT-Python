@@ -1,0 +1,70 @@
+import paho.mqtt.client as mqtt
+import time
+import sys
+import pifacedigitalio
+
+#time.sleep(30) #Sleep to allow wireless to connect before starting MQTT
+
+#set up user info
+username = "username from mqtt dashboard"
+password = "password from mqtt dashboard"
+clientid = "clientid from mqtt dashboard"
+
+#handle incoming messages from Cayenne
+def on_message(client, userdata, message):
+    #print("Received message '" + str(message.payload) + "' on topic '" + message.topic + "' with QoS " + str(message.qos)) #uncomment to print recieved message
+    updatevaluetopic = str(message.topic.rsplit('/',2)[0]) + "/data/" + str(message.topic.rsplit('/',2)[2]) #topic to send updated value to dashboard
+    commandresponsetopic = str(message.topic.rsplit('/',2)[0]) + "/response" #topic to send response to dashboard
+    try: #if there is an error let Cayenne know about it
+        pfd.output_pins[int(message.topic.rsplit('/',2)[2])].value = int(message.payload.split(',')[1]) #set output to the value recieved
+        updatevalue = message.payload.split(',')[1] #set value to send back to dashboard
+        mqttc.publish(updatevaluetopic, payload=updatevalue, retain=True) #send back the value that was recieved to update the dashboard widget
+        commandresponse = "ok," + str(message.payload.split(',')[0]) #set the response to send back to the dasboard
+        mqttc.publish(commandresponsetopic, payload=commandresponse, retain=True) #send response to the dashboard
+    except:
+        commandresponse = "error," + str(message.payload.split(',')[0])
+        mqttc.publish(topic, payload=commandresponse, retain=True)
+
+#handle falling events
+def updatedashboardfalling(event):
+    updatevaluetopic = "v1/64a355a0-3593-11e7-9137-6ba1cddf7c15/things/31ed0eb0-56dd-11e7-a938-f527c55b198b/data/" + str(event.pin_num + 8) #topic to send updated value to dashboard
+    updatevalue = "digital,d=1" #set value to send back to dashboard
+    mqttc.publish(updatevaluetopic, payload=updatevalue, retain=True) #send value to dashboard
+
+#handle rising events
+def updatedashboardrising(event):
+    updatevaluetopic = "v1/64a355a0-3593-11e7-9137-6ba1cddf7c15/things/31ed0eb0-56dd-11e7-a938-f527c55b198b/data/" + str(event.pin_num + 8) #topic to send updated value to dashboard
+    updatevalue = "digital,d=0" #set value to send back to dashboard
+    mqttc.publish(updatevaluetopic, payload=updatevalue, retain=True) #send value to dashboard
+
+#Set up PiFace Digital
+pifacedigitalio.init()
+pfd = pifacedigitalio.PiFaceDigital()
+
+#set up MQTT
+mqttc = mqtt.Client(client_id=clientid)
+mqttc.username_pw_set(username, password=password)
+mqttc.connect("mqtt.mydevices.com", port=1883, keepalive=60)
+mqttc.loop_start()
+mqttc.subscribe("v1/" + str(username) + "/things/" + str(clientid) + "/cmd/#")
+mqttc.message_callback_add("v1/" + str(username) + "/things/" + str(clientid) + "/cmd/#", on_message)
+
+#set up interrupts
+listener = pifacedigitalio.InputEventListener(chip=pfd)
+for i in range(4):
+    listener.register(i, pifacedigitalio.IODIR_FALLING_EDGE, updatedashboardfalling)
+for i in range(4):
+    listener.register(i, pifacedigitalio.IODIR_RISING_EDGE, updatedashboardrising)
+listener.activate()
+
+while True:
+    try:
+        for i in range(8): #since interrupts can be unreliable send the actual value to the dashboard every 1 second as well
+            updatevaluetopic = "v1/64a355a0-3593-11e7-9137-6ba1cddf7c15/things/31ed0eb0-56dd-11e7-a938-f527c55b198b/data/" + str(i + 8) #topic to send updated value to dashboard
+            updatevalue = "digital,d=" + str(pfd.input_pins[i].value) #set value to send back to dashboard
+            mqttc.publish(updatevaluetopic, payload=updatevalue, retain=True) #send value to dashboard
+        time.sleep(1)
+    except (EOFError, SystemExit, KeyboardInterrupt): #handle ctrl+c and reboots cleanly
+        mqttc.disconnect()
+        listener.deactivate()
+        sys.exit()
