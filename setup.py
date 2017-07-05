@@ -36,6 +36,6 @@ setup(name             = 'cayenne-mqtt',
       classifiers      = classifiers,
       packages         = ['cayenne'],
       install_requires = [
-        'paho-mqtt',
+        'paho-mqtt >= 1.0',
       ],
       )

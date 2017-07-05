@@ -34,7 +34,7 @@ RESPONSE_TOPIC = "response"
 
 
 # The callback for when the client receives a CONNACK response from the server.
-def on_connect(client, cayenne, rc):
+def on_connect(client, cayenne, flags, rc):
     if rc != 0:
         # MQTT broker error codes
         broker_errors = {
