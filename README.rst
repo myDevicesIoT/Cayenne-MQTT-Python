@@ -1,6 +1,6 @@
 Cayenne MQTT Python Library
 ***************************
-The Cayenne MQTT Python Library provides functions to easily connect to the `Cayenne IoT project builder <https://www.cayenne-mydevices.com>`_. With it you can send data to and receive data from Cayenne.
+The Cayenne MQTT Python Library provides functions to easily connect to the `Cayenne IoT project builder <https://mydevices.com>`_. With it you can send data to and receive data from Cayenne.
 
 Requirements
 ============
@@ -26,7 +26,7 @@ It can also be installed from the repository:
   
 Cayenne Setup
 -------------
-1. Create your Cayenne account at https://www.cayenne-mydevices.com.
+1. Create your Cayenne account at https://mydevices.com.
 2. Add a new device using the Bring Your Own Thing API selection.
 
 Examples
