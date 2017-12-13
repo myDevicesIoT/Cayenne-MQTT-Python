@@ -1,12 +1,31 @@
-"""
-This module contains the main agent client for connecting to the Cayenne server. The client connects
-to server, sends data to the server and handles commands from the server.
-"""
-
-import time
 import paho.mqtt.client as mqtt
+import time
 from cayenne import __version__
-from cayenne.datatypes import *
+
+# Data types
+TYPE_BAROMETRIC_PRESSURE = "bp" # Barometric pressure
+TYPE_BATTERY = "batt" # Battery
+TYPE_LUMINOSITY = "lum" # Luminosity
+TYPE_PROXIMITY = "prox" # Proximity
+TYPE_RELATIVE_HUMIDITY = "rel_hum" # Relative Humidity
+TYPE_TEMPERATURE = "temp" # Temperature
+TYPE_VOLTAGE = "voltage" # Voltage
+
+# Unit types
+UNIT_UNDEFINED = "null"
+UNIT_PASCAL = "pa" # Pascal
+UNIT_HECTOPASCAL = "hpa" # Hectopascal
+UNIT_PERCENT = "p" # % (0 to 100)
+UNIT_RATIO = "r" # Ratio
+UNIT_VOLTS = "v" # Volts
+UNIT_LUX = "lux" # Lux
+UNIT_CENTIMETER = "cm" # Centimeter
+UNIT_METER = "m" # Meter
+UNIT_DIGITAL = "d" # Digital (0/1)
+UNIT_FAHRENHEIT = "f" # Fahrenheit
+UNIT_CELSIUS = "c" # Celsius
+UNIT_KELVIN = "k" # Kelvin
+UNIT_MILLIVOLTS = "mv" # Millivolts
 
 # Topics
 COMMAND_TOPIC = "cmd"
@@ -33,7 +52,7 @@ def on_connect(client, cayenne, flags, rc):
         # reconnect then subscriptions will be renewed.
         cayenne.connected = True
         cayenne.reconnect = False
-        command_topic = cayenne.getCommandTopic()
+        command_topic = cayenne.getCommandTopic();
         print("SUB %s\n" % command_topic)
         client.subscribe(command_topic)
         cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
@@ -235,30 +254,6 @@ class CayenneMQTTClient:
         value is the data value to send.
         """
         self.virtualWrite(channel, value, TYPE_BAROMETRIC_PRESSURE, UNIT_HECTOPASCAL)
-
-    def accelWrite(self, channel, x=UNIT_UNDEFINED, y=UNIT_UNDEFINED, z=UNIT_UNDEFINED):
-        """Send an acceleration value list to Cayenne.
-
-        channel is the Cayenne channel to use.
-        x is the acceleration on the X-axis.
-        y is the acceleration on the Y-axis.
-        z is the acceleration on the Z-axis.
-        """
-        value = [x, y, z]
-        value = ''.join(c for c in repr(value) if c not in (" ", "'"))
-        self.virtualWrite(channel, value, TYPE_ACCELERATION, UNIT_G)
-
-    def gpsWrite(self, channel, latitude=UNIT_UNDEFINED, longitude=UNIT_UNDEFINED, altitude=UNIT_UNDEFINED):
-        """Send a GPS value list to Cayenne.
-
-        channel is the Cayenne channel to use.
-        latitude is the latitude in degrees.
-        longitude is the longitude in degrees.
-        altitude is the altitude in meters.
-        """
-        value = [latitude, longitude, altitude]
-        value = ''.join(c for c in repr(value) if c not in (" ", "'"))
-        self.virtualWrite(channel, value, TYPE_GPS, UNIT_METER)
 
     def mqttPublish(self, topic, payload):
         """Publish a payload to a topic
