@@ -4,7 +4,7 @@ The Cayenne MQTT Python Library provides functions to easily connect to the `Cay
 
 Requirements
 ============
-* `Python 2.7 or 3.x <https://www.python.org/downloads/>`_.
+* `Python 2.7.9+ or 3.4+ <https://www.python.org/downloads/>`_.
 * `This library <https://github.com/myDevicesIoT/Cayenne-MQTT-Python/archive/master.zip>`_.
 * `Eclipse Paho MQTT Python client library <https://github.com/eclipse/paho.mqtt.python>`_. This is installed as part of the Cayenne library installation.
 
