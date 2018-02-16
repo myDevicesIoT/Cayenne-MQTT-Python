@@ -1,5 +1,6 @@
-import paho.mqtt.client as mqtt
 import time
+from ssl import PROTOCOL_TLSv1_2
+import paho.mqtt.client as mqtt
 from cayenne import __version__
 
 # Data types
@@ -140,8 +141,10 @@ class CayenneMQTTClient:
         self.client.on_disconnect = on_disconnect
         self.client.on_message = on_message
         self.client.username_pw_set(username, password)
+        if port == 8883:
+            self.client.tls_set(tls_version=PROTOCOL_TLSv1_2)
         self.client.connect(hostname, port, 60)        
-        print("Connecting to %s..." % hostname)
+        print("Connecting to {}:{}".format(hostname, port))
 
     def loop(self):
         """Process Cayenne messages.
