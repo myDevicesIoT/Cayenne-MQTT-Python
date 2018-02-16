@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 with open(path.join(here, 'README.rst'), encoding='utf-8') as readme:
     long_description = readme.read()
 
-classifiers = ['Development Status :: 3 - Alpha',
+classifiers = ['Development Status :: 5 - Production/Stable',
                'Operating System :: MacOS :: MacOS X',
                'Operating System :: Microsoft :: Windows',
                'Operating System :: POSIX',
@@ -36,6 +36,6 @@ setup(name             = 'cayenne-mqtt',
       classifiers      = classifiers,
       packages         = ['cayenne'],
       install_requires = [
-        'paho-mqtt >= 1.0',
+        'paho-mqtt >= 1.3.0',
       ],
       )

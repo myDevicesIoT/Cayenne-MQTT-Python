@@ -15,5 +15,7 @@ def on_message(message):
 client = cayenne.client.CayenneMQTTClient()
 client.on_message = on_message
 client.begin(MQTT_USERNAME, MQTT_PASSWORD, MQTT_CLIENT_ID)
+# For a secure connection use port 8883 when calling client.begin:
+# client.begin(MQTT_USERNAME, MQTT_PASSWORD, MQTT_CLIENT_ID, port=8883)
 client.loop_forever()
 
