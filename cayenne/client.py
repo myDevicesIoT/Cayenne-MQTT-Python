@@ -133,7 +133,7 @@ class CayenneMQTTClient:
         password is the Cayenne password.
         clientID is the Cayennne client ID for the device.
         hostname is the MQTT broker hostname.
-        port is the MQTT broker port.
+        port is the MQTT broker port. Use port 8883 for secure connections.
         """
         self.rootTopic = "v1/%s/things/%s" % (username, clientid)
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
