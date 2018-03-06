@@ -88,7 +88,7 @@ class CayenneMQTTClient:
     reconnect = False
     on_message = None
 
-    def begin(self, username, password, clientid, hostname='mqtt.mydevices.com', port=1883, logname=LOG_NAME, loglevel=logging.CRITICAL):
+    def begin(self, username, password, clientid, hostname='mqtt.mydevices.com', port=1883, logname=LOG_NAME, loglevel=logging.WARNING):
         """Initializes the client and connects to Cayenne.
 
         username is the Cayenne username.
@@ -96,8 +96,8 @@ class CayenneMQTTClient:
         clientID is the Cayennne client ID for the device.
         hostname is the MQTT broker hostname.
         port is the MQTT broker port. Use port 8883 for secure connections.
-        logname is the name of the users log if they want the client to log to their logging setup default: root
-        loglevel is the logging level that will be applied to logs default: CRITICAL
+        logname is the name of the users log if they want the client to log to their logging setup.
+        loglevel is the logging level that will be applied to logs.
         """
         self.rootTopic = "v1/%s/things/%s" % (username, clientid)
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
@@ -108,6 +108,7 @@ class CayenneMQTTClient:
         self.log = logging.getLogger(logname)
         if logname == LOG_NAME:
             logging.basicConfig(stream=sys.stdout, format='%(message)s', level=loglevel)
+        self.client.enable_logger(self.log)
         if port == 8883:
             self.client.tls_set(tls_version=PROTOCOL_TLSv1_2)
         self.client.connect(hostname, port, 60)
@@ -272,7 +273,7 @@ class CayenneMQTTClient:
     def client_on_message(self):
         # The callback for when a PUBLISH message is received from the server.
         def on_message(client, cayenne, msg):
-            self.log.info("{} {}".format(msg.topic, msg.payload))
+            self.log.info("RCV {} {}".format(msg.topic, msg.payload))
             if cayenne.on_message:
                 message = CayenneMessage(msg)
                 error = cayenne.on_message(message)
