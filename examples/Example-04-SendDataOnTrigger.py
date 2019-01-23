@@ -48,5 +48,5 @@ while True:
         send_trigger_value(TRIGGER_CHANNEL, sensor_value, THRESHOLD, send_below_threshold)
         timestamp = time.time()
         i = i + 1
-        if (i == 12): #used to reset i 
+        if (i == 12): # Reset the sensor value to test that the trigger gets reset.
             i = 0
