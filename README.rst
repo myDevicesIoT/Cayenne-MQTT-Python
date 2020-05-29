@@ -12,17 +12,33 @@ Getting Started
 ===============
 Installation
 ------------
-This library can be installed using pip:
+This library can be installed using pip.
+
+Python 2:
 ::
 
   pip install cayenne-mqtt
 
-It can also be installed from the repository:
+Python 3:
+::
+
+  pip3 install cayenne-mqtt
+
+It can also be installed from the repository.
+
+Python 2:
 ::
 
   git clone https://github.com/myDevicesIoT/Cayenne-MQTT-Python
   cd Cayenne-MQTT-Python
   python setup.py install
+
+Python 3:
+::
+
+  git clone https://github.com/myDevicesIoT/Cayenne-MQTT-Python
+  cd Cayenne-MQTT-Python
+  python3 setup.py install
   
 Cayenne Setup
 -------------
