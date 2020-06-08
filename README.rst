@@ -26,7 +26,7 @@ It can also be installed from the repository:
   
 Cayenne Setup
 -------------
-1. Create your Cayenne account at https://mydevices.com.
+1. Create your Cayenne account  `here <https://developers.mydevices.com/cayenne/features/>`_.
 2. Add a new device using the Bring Your Own Thing API selection.
 
 Examples
