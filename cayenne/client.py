@@ -1,3 +1,4 @@
+from http import client
 import time
 from ssl import PROTOCOL_TLSv1_2
 import paho.mqtt.client as mqtt
@@ -99,7 +100,7 @@ class CayenneMQTTClient:
         logname is the name of the users log if they want the client to log to their logging setup.
         loglevel is the logging level that will be applied to logs.
         """
-        self.rootTopic = "v1/%s/things/%s" % (username, clientid)
+        self.rootTopic = f"v1/{username}/things/{clientid}"
         self.client = mqtt.Client(client_id=clientid, clean_session=True, userdata=self)
         self.client.on_connect = self.client_on_connect()
         self.client.on_disconnect = self.client_on_disconnect()
@@ -137,15 +138,15 @@ class CayenneMQTTClient:
 
         channel is the channel to send data to.
         """
-        return "%s/%s/%s" % (self.rootTopic, DATA_TOPIC, channel)
+        return f"{self.rootTopic}/{DATA_TOPIC}/{channel}"
 
     def getCommandTopic(self):
         """Get the command topic string."""
-        return "%s/%s/+" % (self.rootTopic, COMMAND_TOPIC)
+        return f"{self.rootTopic}/{COMMAND_TOPIC}/+"
 
     def getResponseTopic(self):
         """Get the response topic string."""
-        return "%s/%s" % (self.rootTopic, RESPONSE_TOPIC)
+        return f"{self.rootTopic}/{RESPONSE_TOPIC}"
 
     def virtualWrite(self, channel, value, dataType="", dataUnit=""):
         """Send data to Cayenne.
@@ -158,7 +159,7 @@ class CayenneMQTTClient:
         if (self.connected):
             topic = self.getDataTopic(channel)
             if dataType:
-                payload = "%s,%s=%s" % (dataType, dataUnit, value)
+                payload = f"{dataType},{dataUnit}={value}"
             else:
                 payload = value
             self.mqttPublish(topic, payload)
@@ -173,9 +174,9 @@ class CayenneMQTTClient:
         if (self.connected):
             topic = self.getResponseTopic()
             if error_message:
-                payload = "error,%s=%s" % (msg_id, error_message)
+                payload = f"error,{msg_id}={error_message}"
             else:
-                payload = "ok,%s" % (msg_id)
+                payload = f"ok,{msg_id}"
             self.mqttPublish(topic, payload)
 
     def celsiusWrite(self, channel, value):
@@ -232,7 +233,7 @@ class CayenneMQTTClient:
         topic is the topic string.
         payload is the payload data.
         """
-        self.log.info("PUB %s %s" % (topic, payload))
+        self.log.info(f"PUB {topic} {payload}")
         self.client.publish(topic, payload, 0, False)
 
     def client_on_connect(self):
@@ -258,8 +259,8 @@ class CayenneMQTTClient:
                 command_topic = cayenne.getCommandTopic();
                 self.log.info("SUB {}".format(command_topic))
                 client.subscribe(command_topic)
-                cayenne.mqttPublish("%s/sys/model" % cayenne.rootTopic, "Python")
-                cayenne.mqttPublish("%s/sys/version" % cayenne.rootTopic, __version__)
+                cayenne.mqttPublish(f"{cayenne.rootTopic}/sys/model", "Python")
+                cayenne.mqttPublish(f"{cayenne.rootTopic}/sys/version", __version__)
         return on_connect
 
     def client_on_disconnect(self):
